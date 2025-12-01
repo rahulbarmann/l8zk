@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Fix binary permissions
+        run: |
+          if [ -f node_modules/@l8zk/sdk-linux-x64/bin/ecdsa-spartan2 ]; then
+            chmod +x node_modules/@l8zk/sdk-linux-x64/bin/ecdsa-spartan2
+          fi
+
       - name: Run linter
         run: npm run lint
 
