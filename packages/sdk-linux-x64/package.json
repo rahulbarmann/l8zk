@@ -1,0 +1,20 @@
+{
+  "name": "@l8zk/sdk-linux-x64",
+  "version": "1.0.0",
+  "description": "L8ZK SDK native binary for Linux x64",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bin/ecdsa-spartan2",
+  "files": [
+    "bin"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahulbarmann/l8zk"
+  }
+}
