@@ -1,6 +1,6 @@
 {
   "name": "@l8zk/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Privacy-preserving verifiable credentials using zero-knowledge proofs. Production implementation of the OpenAC protocol.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -86,9 +86,9 @@
     "@noble/hashes": "^1.5.0"
   },
   "optionalDependencies": {
-    "@l8zk/sdk-darwin-arm64": "1.0.0",
-    "@l8zk/sdk-darwin-x64": "1.0.0",
-    "@l8zk/sdk-linux-x64": "1.0.0",
-    "@l8zk/sdk-linux-arm64": "1.0.0"
+    "@l8zk/sdk-darwin-arm64": "1.1.0",
+    "@l8zk/sdk-darwin-x64": "1.1.0",
+    "@l8zk/sdk-linux-x64": "1.1.0",
+    "@l8zk/sdk-linux-arm64": "1.1.0"
   }
 }
