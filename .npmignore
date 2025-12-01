@@ -1,0 +1,40 @@
+# Source files
+src/
+tests/
+examples/
+
+# Build artifacts
+*.log
+*.tsbuildinfo
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+.gitmodules
+
+# CI/CD
+.github/
+
+# Documentation
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Native backend (users build their own)
+wallet-unit-poc/
+
+# Config files
+tsconfig*.json
+vitest.config.ts
+.eslintrc.json
+.prettierrc

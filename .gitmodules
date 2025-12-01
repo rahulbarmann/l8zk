@@ -1,0 +1,4 @@
+[submodule "wallet-unit-poc"]
+	path = wallet-unit-poc
+	url = https://github.com/privacy-scaling-explorations/zkID.git
+	branch = main

@@ -1,0 +1,88 @@
+{
+  "name": "@l8zk/sdk",
+  "version": "1.0.0",
+  "description": "Privacy-preserving verifiable credentials using zero-knowledge proofs. Production implementation of the OpenAC protocol.",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist",
+    "submodule:init": "git submodule update --init --recursive",
+    "submodule:update": "git submodule update --remote --merge",
+    "demo": "npx tsx examples/full-demo/index.ts",
+    "test:basic": "npx tsx scripts/test-basic-usage.ts",
+    "test:e2e": "npx tsx scripts/test-e2e.ts"
+  },
+  "keywords": [
+    "zero-knowledge",
+    "zk-proofs",
+    "verifiable-credentials",
+    "privacy",
+    "identity",
+    "sd-jwt",
+    "spartan",
+    "anonymous-credentials",
+    "eudi",
+    "openac",
+    "l8zk"
+  ],
+  "author": "L8ZK",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahulbarmann/l8zk"
+  },
+  "bugs": {
+    "url": "https://github.com/rahulbarmann/l8zk/issues"
+  },
+  "homepage": "https://github.com/rahulbarmann/l8zk#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "react-native": ">=0.70.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@noble/curves": "^1.6.0",
+    "@noble/hashes": "^1.5.0"
+  }
+}
