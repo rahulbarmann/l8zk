@@ -29,9 +29,10 @@ jobs:
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
             package: sdk-linux-arm64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            package: sdk-win32-x64
+          # Windows disabled - rust-witness requires w2c2 which isn't available
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   package: sdk-win32-x64
 
     runs-on: ${{ matrix.os }}
 
@@ -40,18 +41,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Download circom build artifacts (Unix)
-        if: runner.os != 'Windows'
+      - name: Download circom build artifacts
         run: |
           curl -L ${{ env.CIRCOM_BUILD_URL }} -o circom-build.tar.gz
           tar -xzf circom-build.tar.gz -C wallet-unit-poc/wallet-unit-poc/circom/
           ls -la wallet-unit-poc/wallet-unit-poc/circom/build/
-
-      - name: Download circom build artifacts (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Invoke-WebRequest -Uri "${{ env.CIRCOM_BUILD_URL }}" -OutFile circom-build.tar.gz
-          tar -xzf circom-build.tar.gz -C wallet-unit-poc/wallet-unit-poc/circom/
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -62,18 +56,11 @@ jobs:
         working-directory: wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Prepare package (Unix)
-        if: runner.os != 'Windows'
+      - name: Prepare package
         run: |
           mkdir -p packages/${{ matrix.package }}/bin
           cp wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/${{ matrix.target }}/release/ecdsa-spartan2 packages/${{ matrix.package }}/bin/
           chmod +x packages/${{ matrix.package }}/bin/ecdsa-spartan2
-
-      - name: Prepare package (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          New-Item -ItemType Directory -Force -Path packages/${{ matrix.package }}/bin
-          Copy-Item wallet-unit-poc\wallet-unit-poc\ecdsa-spartan2\target\${{ matrix.target }}\release\ecdsa-spartan2.exe packages\${{ matrix.package }}\bin\
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -102,7 +89,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          for pkg in sdk-darwin-arm64 sdk-darwin-x64 sdk-linux-x64 sdk-linux-arm64 sdk-win32-x64; do
+          for pkg in sdk-darwin-arm64 sdk-darwin-x64 sdk-linux-x64 sdk-linux-arm64; do
             echo "Publishing @l8zk/$pkg..."
             cp -r artifacts/$pkg/bin packages/$pkg/
             cd packages/$pkg

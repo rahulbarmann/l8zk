@@ -89,7 +89,6 @@
     "@l8zk/sdk-darwin-arm64": "1.0.0",
     "@l8zk/sdk-darwin-x64": "1.0.0",
     "@l8zk/sdk-linux-x64": "1.0.0",
-    "@l8zk/sdk-linux-arm64": "1.0.0",
-    "@l8zk/sdk-win32-x64": "1.0.0"
+    "@l8zk/sdk-linux-arm64": "1.0.0"
   }
 }
