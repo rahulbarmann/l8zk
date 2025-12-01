@@ -141,20 +141,22 @@ async function downloadFile(
 
   let downloadedBytes = 0;
   let lastReportedPercent = 0;
+  let done = false;
 
-  while (true) {
-    const { done, value } = await reader.read();
+  while (!done) {
+    const result = await reader.read();
+    done = result.done;
 
-    if (done) break;
+    if (result.value) {
+      fileStream.write(Buffer.from(result.value));
+      downloadedBytes += result.value.length;
 
-    fileStream.write(Buffer.from(value));
-    downloadedBytes += value.length;
-
-    if (totalBytes > 0) {
-      const percent = Math.floor((downloadedBytes / totalBytes) * 100);
-      if (percent > lastReportedPercent) {
-        lastReportedPercent = percent;
-        onProgress?.(percent);
+      if (totalBytes > 0) {
+        const percent = Math.floor((downloadedBytes / totalBytes) * 100);
+        if (percent > lastReportedPercent) {
+          lastReportedPercent = percent;
+          onProgress?.(percent);
+        }
       }
     }
   }
