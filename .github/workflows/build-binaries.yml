@@ -101,6 +101,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm ci
+          npm install --ignore-scripts --omit=optional
           npm run build
           npm publish --access public || true
