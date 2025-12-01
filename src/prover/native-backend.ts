@@ -47,7 +47,9 @@ function findBinary(): string | null {
   const platformPkg = `@l8zk/sdk-${platform}-${arch}`;
 
   const possiblePaths = [
-    // 1. Platform-specific npm package via require.resolve
+    // 1. Platform package in cwd's node_modules (postinstall runs here, has +x)
+    resolve(process.cwd(), "node_modules", platformPkg, "bin", binaryName),
+    // 2. Platform-specific npm package via require.resolve (may be nested without +x)
     (() => {
       try {
         const pkgPath = require.resolve(`${platformPkg}/package.json`);
@@ -56,8 +58,6 @@ function findBinary(): string | null {
         return null;
       }
     })(),
-    // 2. Platform package in cwd's node_modules (for linked SDK scenarios)
-    resolve(process.cwd(), "node_modules", platformPkg, "bin", binaryName),
     // 3. Nested submodule structure (wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2)
     resolve(
       process.cwd(),
