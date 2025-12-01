@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  CIRCOM_BUILD_URL: https://github.com/rahulbarmann/l8zk/releases/download/circom-build-v1/circom-build-v2.tar.gz
+  CIRCOM_BUILD_URL: https://github.com/rahulbarmann/l8zk/releases/download/circom-build-v1/circom-build-v3.tar.gz
 
 jobs:
   build:

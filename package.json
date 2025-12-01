@@ -1,6 +1,6 @@
 {
   "name": "@l8zk/sdk",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Privacy-preserving verifiable credentials using zero-knowledge proofs. Production implementation of the OpenAC protocol.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",

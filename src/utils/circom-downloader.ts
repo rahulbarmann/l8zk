@@ -9,7 +9,7 @@ import { homedir } from "os";
 import { execSync } from "child_process";
 
 const CIRCOM_ARTIFACTS_URL =
-  "https://github.com/rahulbarmann/l8zk/releases/download/circom-build-v1/circom-build-v2.tar.gz";
+  "https://github.com/rahulbarmann/l8zk/releases/download/circom-build-v1/circom-build-v3.tar.gz";
 
 // Structure: ~/.l8zk/circom/build/... (artifacts)
 //            ~/.l8zk/ecdsa-spartan2/ (working dir for binary)
