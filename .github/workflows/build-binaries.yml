@@ -2,6 +2,9 @@ name: Build Native Binaries
 
 on:
   push:
+    branches:
+      - rust-prebuilds
+      - main
     tags:
       - "v*"
   workflow_dispatch:
