@@ -25,32 +25,56 @@ export function isNodeJS(): boolean {
   );
 }
 
+/** Get platform-specific package name */
+function getPlatformPackage(): string {
+  const platform = process.platform;
+  const arch = process.arch;
+  return `@l8zk/sdk-${platform}-${arch}`;
+}
+
 /** Find the ecdsa-spartan2 binary */
 function findBinary(): string | null {
+  const platform = process.platform;
+  const arch = process.arch;
+  const binaryName = platform === "win32" ? "ecdsa-spartan2.exe" : "ecdsa-spartan2";
+
   const possiblePaths = [
-    // Nested submodule structure (wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2)
+    // 1. Platform-specific npm package (installed via optionalDependencies)
+    (() => {
+      try {
+        const pkgPath = require.resolve(`@l8zk/sdk-${platform}-${arch}/package.json`);
+        return resolve(pkgPath, "..", "bin", binaryName);
+      } catch {
+        return null;
+      }
+    })(),
+    // 2. Nested submodule structure (wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2)
     resolve(
       process.cwd(),
-      "wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release/ecdsa-spartan2"
+      "wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release",
+      binaryName
     ),
-    // Direct submodule structure (wallet-unit-poc/ecdsa-spartan2)
-    resolve(process.cwd(), "wallet-unit-poc/ecdsa-spartan2/target/release/ecdsa-spartan2"),
-    // Relative to __dirname (when running from dist/)
+    // 3. Direct submodule structure (wallet-unit-poc/ecdsa-spartan2)
+    resolve(process.cwd(), "wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
+    // 4. Relative to __dirname (when running from dist/)
     resolve(
       __dirname,
-      "../../wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release/ecdsa-spartan2"
+      "../../wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release",
+      binaryName
     ),
-    resolve(__dirname, "../../wallet-unit-poc/ecdsa-spartan2/target/release/ecdsa-spartan2"),
-    resolve(__dirname, "../../../wallet-unit-poc/ecdsa-spartan2/target/release/ecdsa-spartan2"),
-    // In PATH
+    resolve(__dirname, "../../wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
+    resolve(__dirname, "../../../wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
+    // 5. In PATH
     "ecdsa-spartan2",
-  ];
+  ].filter(Boolean) as string[];
 
   for (const p of possiblePaths) {
     try {
       if (p === "ecdsa-spartan2") {
         // Check if in PATH
-        execSync("which ecdsa-spartan2", { stdio: "ignore" });
+        execSync(platform === "win32" ? "where ecdsa-spartan2" : "which ecdsa-spartan2", {
+          stdio: "ignore",
+        });
         return p;
       } else if (existsSync(p)) {
         return p;

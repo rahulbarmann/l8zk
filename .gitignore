@@ -43,6 +43,10 @@ keys/
 *.key
 *.bin
 
+# Platform-specific binaries (built by CI)
+packages/*/bin/ecdsa-spartan2
+packages/*/bin/ecdsa-spartan2.exe
+
 # Lock files (optional - uncomment if you want to ignore)
 # package-lock.json
 # yarn.lock
