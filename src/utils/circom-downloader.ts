@@ -11,7 +11,12 @@ import { execSync } from "child_process";
 const CIRCOM_ARTIFACTS_URL =
   "https://github.com/rahulbarmann/l8zk/releases/download/circom-build-v1/circom-build.tar.gz";
 
-const CACHE_DIR = join(homedir(), ".l8zk", "circom");
+// Structure: ~/.l8zk/circom/build/... (artifacts)
+//            ~/.l8zk/ecdsa-spartan2/ (working dir for binary)
+// Binary runs from ecdsa-spartan2/ and looks for ../circom/build/
+const CACHE_BASE = join(homedir(), ".l8zk");
+const CACHE_DIR = join(CACHE_BASE, "circom");
+const WORKING_DIR = join(CACHE_BASE, "ecdsa-spartan2");
 const MARKER_FILE = join(CACHE_DIR, ".downloaded");
 
 export interface DownloadProgress {
@@ -36,6 +41,13 @@ export function isCircomCached(): boolean {
  */
 export function getCircomCachePath(): string {
   return CACHE_DIR;
+}
+
+/**
+ * Get the working directory for the binary (where ../circom/build exists)
+ */
+export function getWorkingDir(): string {
+  return WORKING_DIR;
 }
 
 /**
@@ -79,8 +91,10 @@ export async function downloadCircomArtifacts(onProgress?: ProgressCallback): Pr
     // Cleanup tar file
     unlinkSync(tarPath);
 
+    // Create working directory for binary (binary looks for ../circom/build/)
+    mkdirSync(WORKING_DIR, { recursive: true });
+
     // Create marker file
-    mkdirSync(join(CACHE_DIR, "build"), { recursive: true });
     execSync(`touch "${MARKER_FILE}"`);
 
     onProgress?.({

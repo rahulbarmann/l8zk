@@ -14,6 +14,7 @@ import { ProofError, ConfigError } from "../errors";
 import {
   isCircomCached,
   getCircomCachePath,
+  getWorkingDir,
   ensureCircomArtifacts,
   type ProgressCallback,
 } from "../utils/circom-downloader";
@@ -128,16 +129,18 @@ export function hasCircomArtifacts(): boolean {
 
 /** Ensure circom artifacts are available, downloading if needed */
 export async function ensureCircom(onProgress?: ProgressCallback): Promise<string> {
-  // First check local paths
+  // First check local paths (dev environment)
   const localPath = findCircomDir();
   if (localPath && existsSync(join(localPath, "build", "jwt", "jwt_js", "jwt.r1cs"))) {
+    circomPath = localPath;
     return localPath;
   }
 
   // Download if not available
-  const cachePath = await ensureCircomArtifacts(onProgress);
-  circomPath = cachePath;
-  return cachePath;
+  await ensureCircomArtifacts(onProgress);
+  // Return working directory where binary should run (../circom/build exists from there)
+  circomPath = getWorkingDir();
+  return circomPath;
 }
 
 /** Initialize the native backend */
