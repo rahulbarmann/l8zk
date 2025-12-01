@@ -7,10 +7,16 @@
 import { spawn, execSync } from "child_process";
 import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync } from "fs";
 import { join, resolve } from "path";
-import { tmpdir } from "os";
+import { tmpdir, homedir } from "os";
 import { randomBytes } from "crypto";
 import type { ProveResult } from "./wasm-loader";
 import { ProofError, ConfigError } from "../errors";
+import {
+  isCircomCached,
+  getCircomCachePath,
+  ensureCircomArtifacts,
+  type ProgressCallback,
+} from "../utils/circom-downloader";
 
 /** Path to the ecdsa-spartan2 binary */
 let binaryPath: string | null = null;
@@ -90,6 +96,9 @@ function findBinary(): string | null {
 /** Find the circom directory */
 function findCircomDir(): string | null {
   const possiblePaths = [
+    // 1. Cached circom artifacts (downloaded on first use)
+    getCircomCachePath(),
+    // 2. Local development paths
     resolve(process.cwd(), "wallet-unit-poc/wallet-unit-poc/circom"),
     resolve(process.cwd(), "wallet-unit-poc/circom"),
     resolve(process.cwd(), "../wallet-unit-poc/circom"),
@@ -99,12 +108,36 @@ function findCircomDir(): string | null {
   ];
 
   for (const p of possiblePaths) {
+    // Check for build artifacts (r1cs files)
+    if (existsSync(join(p, "build", "jwt", "jwt_js", "jwt.r1cs"))) {
+      return p;
+    }
+    // Fallback to circuits.json for dev environments
     if (existsSync(join(p, "circuits.json"))) {
       return p;
     }
   }
 
   return null;
+}
+
+/** Check if circom artifacts are available (either cached or local) */
+export function hasCircomArtifacts(): boolean {
+  return isCircomCached() || findCircomDir() !== null;
+}
+
+/** Ensure circom artifacts are available, downloading if needed */
+export async function ensureCircom(onProgress?: ProgressCallback): Promise<string> {
+  // First check local paths
+  const localPath = findCircomDir();
+  if (localPath && existsSync(join(localPath, "build", "jwt", "jwt_js", "jwt.r1cs"))) {
+    return localPath;
+  }
+
+  // Download if not available
+  const cachePath = await ensureCircomArtifacts(onProgress);
+  circomPath = cachePath;
+  return cachePath;
 }
 
 /** Initialize the native backend */

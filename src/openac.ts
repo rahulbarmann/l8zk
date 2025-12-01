@@ -31,6 +31,7 @@ import {
   nativeProveShow,
   nativeReblind,
   nativeVerify,
+  ensureCircom,
 } from "./prover/native-backend";
 import { parseSDJWT, extractMetadata } from "./credential/parser";
 import { serializeProof, deserializeProof, quickVerify } from "./prover/verify";
@@ -76,9 +77,19 @@ export class OpenAC {
 
     if (!isNativeAvailable()) {
       throw new ConfigError(
-        "Native backend not available. Build the Rust binary: cd wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2 && cargo build --release"
+        "Native backend not available. Install the SDK with: npm install @l8zk/sdk"
       );
     }
+
+    // Ensure circom artifacts are available (downloads on first use)
+    console.log("[OpenAC] Checking circom artifacts...");
+    await ensureCircom((progress) => {
+      if (progress.phase === "downloading") {
+        console.log(`[OpenAC] ${progress.message}`);
+      } else if (progress.phase === "extracting") {
+        console.log("[OpenAC] Extracting circom artifacts...");
+      }
+    });
 
     const status = initNativeBackend();
     if (!status.available) {
