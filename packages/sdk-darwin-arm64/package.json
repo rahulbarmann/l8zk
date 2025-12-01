@@ -1,6 +1,6 @@
 {
   "name": "@l8zk/sdk-darwin-arm64",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "L8ZK SDK native binary for macOS ARM64 (Apple Silicon)",
   "os": [
     "darwin"
@@ -12,6 +12,9 @@
   "files": [
     "bin"
   ],
+  "scripts": {
+    "postinstall": "chmod +x bin/ecdsa-spartan2 2>/dev/null || true"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
