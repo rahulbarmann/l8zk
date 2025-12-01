@@ -44,26 +44,29 @@ function findBinary(): string | null {
   const platform = process.platform;
   const arch = process.arch;
   const binaryName = platform === "win32" ? "ecdsa-spartan2.exe" : "ecdsa-spartan2";
+  const platformPkg = `@l8zk/sdk-${platform}-${arch}`;
 
   const possiblePaths = [
-    // 1. Platform-specific npm package (installed via optionalDependencies)
+    // 1. Platform-specific npm package via require.resolve
     (() => {
       try {
-        const pkgPath = require.resolve(`@l8zk/sdk-${platform}-${arch}/package.json`);
+        const pkgPath = require.resolve(`${platformPkg}/package.json`);
         return resolve(pkgPath, "..", "bin", binaryName);
       } catch {
         return null;
       }
     })(),
-    // 2. Nested submodule structure (wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2)
+    // 2. Platform package in cwd's node_modules (for linked SDK scenarios)
+    resolve(process.cwd(), "node_modules", platformPkg, "bin", binaryName),
+    // 3. Nested submodule structure (wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2)
     resolve(
       process.cwd(),
       "wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release",
       binaryName
     ),
-    // 3. Direct submodule structure (wallet-unit-poc/ecdsa-spartan2)
+    // 4. Direct submodule structure (wallet-unit-poc/ecdsa-spartan2)
     resolve(process.cwd(), "wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
-    // 4. Relative to __dirname (when running from dist/)
+    // 5. Relative to __dirname (when running from dist/)
     resolve(
       __dirname,
       "../../wallet-unit-poc/wallet-unit-poc/ecdsa-spartan2/target/release",
@@ -71,7 +74,7 @@ function findBinary(): string | null {
     ),
     resolve(__dirname, "../../wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
     resolve(__dirname, "../../../wallet-unit-poc/ecdsa-spartan2/target/release", binaryName),
-    // 5. In PATH
+    // 6. In PATH
     "ecdsa-spartan2",
   ].filter(Boolean) as string[];
 
