@@ -468,3 +468,50 @@ export function cleanupTempFiles(paths: string[]): void {
     }
   }
 }
+
+/**
+ * Get the keys directory path
+ */
+export function getKeysDir(): string {
+  if (!circomPath) {
+    initNativeBackend();
+  }
+  return circomPath ? join(circomPath, "keys") : join(tmpdir(), "l8zk-keys");
+}
+
+/**
+ * Read proof bytes from the keys directory
+ */
+export function readProofBytes(circuit: "prepare" | "show"): {
+  proof: Uint8Array;
+  instance: Uint8Array;
+} {
+  const keysDir = getKeysDir();
+  const proofPath = join(keysDir, `${circuit}_proof.bin`);
+  const instancePath = join(keysDir, `${circuit}_instance.bin`);
+
+  if (!existsSync(proofPath)) {
+    throw new ProofError(`Proof file not found: ${proofPath}`);
+  }
+
+  return {
+    proof: new Uint8Array(readFileSync(proofPath)),
+    instance: existsSync(instancePath)
+      ? new Uint8Array(readFileSync(instancePath))
+      : new Uint8Array(0),
+  };
+}
+
+/**
+ * Read shared blinds from the keys directory
+ */
+export function readSharedBlinds(): Uint8Array {
+  const keysDir = getKeysDir();
+  const blindsPath = join(keysDir, "shared_blinds.bin");
+
+  if (!existsSync(blindsPath)) {
+    throw new ProofError(`Shared blinds file not found: ${blindsPath}`);
+  }
+
+  return new Uint8Array(readFileSync(blindsPath));
+}
