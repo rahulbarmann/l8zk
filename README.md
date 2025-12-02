@@ -10,7 +10,7 @@ The L8ZK SDK enables privacy-preserving credential verification where users can 
 
 ### Key Features
 
-- **Zero-Knowledge Proofs**: Generates actual Spartan2 ZK proofs (~112KB prepare, ~41KB show)
+- **Zero-Knowledge Proofs**: Generates Spartan2 ZK proofs (~112KB prepare, ~41KB show)
 - **No Trusted Setup**: Uses transparent Spartan protocol with Hyrax commitments
 - **SD-JWT Compatible**: Works with Selective Disclosure JWT credentials
 - **Cross-Platform**: Node.js support (macOS/Linux, x64/ARM64)
@@ -66,87 +66,132 @@ Platform binaries are installed automatically via npm's optional dependencies.
 ### Basic Usage (Node.js)
 
 ```typescript
-import { OpenAC } from "@l8zk/sdk";
+import { OpenAC, generateKeyPair, base64UrlEncode } from "@l8zk/sdk";
 
-// Initialize with a credential
-const credential = "eyJhbGc..."; // SD-JWT credential string
+// Helper: Create a test SD-JWT credential
+function createTestCredential(): string {
+  const keys = generateKeyPair();
+  const now = Math.floor(Date.now() / 1000);
 
-// Step 1: Prepare credential (one-time, ~6s)
-const handle = await OpenAC.prepare({
-  credential,
-  deviceBinding: true,
-});
+  const header = { alg: "ES256", typ: "vc+sd-jwt" };
+  const payload = {
+    iss: "https://test-issuer.example.com",
+    sub: "did:example:user123",
+    iat: now,
+    exp: now + 365 * 24 * 60 * 60,
+    cnf: { jwk: keys.publicKey },
+    _sd: [],
+  };
 
-// Step 2: Generate proof (per presentation, ~100ms)
-const proof = await handle.show({
-  policy: { age: { gte: 18 } },
-  nonce: "verifier-challenge-nonce",
-});
+  const headerB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const signatureB64 = base64UrlEncode(new Uint8Array(64).fill(1));
 
-// Step 3: Verify proof (verifier side, ~34ms)
-const result = await OpenAC.verify(proof, {
-  policy: { age: { gte: 18 } },
-  nonce: "verifier-challenge-nonce",
-});
+  const nameDisclosure = base64UrlEncode(
+    new TextEncoder().encode(JSON.stringify(["salt1", "name", "Alice"]))
+  );
+  const ageDisclosure = base64UrlEncode(
+    new TextEncoder().encode(JSON.stringify(["salt2", "roc_birthday", "19901215"]))
+  );
 
-console.log(result.valid); // true
+  return `${headerB64}.${payloadB64}.${signatureB64}~${nameDisclosure}~${ageDisclosure}`;
+}
+
+async function main() {
+  // Step 1: Create/obtain an SD-JWT credential
+  const credential = createTestCredential();
+
+  // Step 2: Prepare credential (one-time, ~6s)
+  const handle = await OpenAC.prepare({
+    credential,
+    deviceBinding: true,
+  });
+
+  // Step 3: Generate proof (per presentation, ~100ms)
+  const nonce = OpenAC.generateNonce();
+  const proof = await handle.show({
+    policy: { age: { gte: 18 } },
+    nonce,
+  });
+
+  // Step 4: Verify proof (verifier side, ~34ms)
+  const result = await OpenAC.verify(proof, { age: { gte: 18 } }, { expectedNonce: nonce });
+
+  console.log(result.valid); // true
+}
+
+main();
 ```
 
 ### Complete Example: Age Verification
 
 ```typescript
-import { OpenAC } from "@l8zk/sdk";
+import { OpenAC, generateKeyPair, base64UrlEncode } from "@l8zk/sdk";
 
-// Issuer: Government issues identity credential
-const issuer = {
-  name: "Federal Republic of Germany",
-  url: "https://federal-republic-of-germany.gov",
-};
+// Helper: Create an SD-JWT credential (in production, this comes from an issuer)
+function createCredential(): string {
+  const keys = generateKeyPair();
+  const now = Math.floor(Date.now() / 1000);
 
-// User receives SD-JWT credential with claims
-const credential = {
-  iss: issuer.url,
-  sub: "user-123",
-  name: "Alice Schmidt",
-  birthdate: "1990-05-15",
-  nationality: "DE",
-};
+  const header = { alg: "ES256", typ: "vc+sd-jwt" };
+  const payload = {
+    iss: "https://federal-republic-of-germany.gov",
+    sub: "did:example:alice-schmidt",
+    iat: now,
+    exp: now + 365 * 24 * 60 * 60,
+    cnf: { jwk: keys.publicKey },
+    _sd: [],
+  };
 
-// User: Prepare credential with ZK proof capability
-const wallet = await OpenAC.prepare({
-  credential: sdJwtString,
-  deviceBinding: true,
-  storage: "memory", // or "indexeddb" for browser
-});
+  const headerB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const signatureB64 = base64UrlEncode(new Uint8Array(64).fill(1));
 
-// Verifier: Request proof of age >= 18
-const verifier = {
-  name: "Berlin Biergarten",
-  challenge: OpenAC.generateNonce(),
-};
+  // Disclosures contain the actual claims
+  const birthdayDisclosure = base64UrlEncode(
+    new TextEncoder().encode(JSON.stringify(["salt1", "roc_birthday", "19900515"]))
+  );
+  const nationalityDisclosure = base64UrlEncode(
+    new TextEncoder().encode(JSON.stringify(["salt2", "nationality", "DE"]))
+  );
 
-// User: Generate privacy-preserving proof
-const presentation = await wallet.show({
-  policy: {
-    age: { gte: 18 },
-  },
-  nonce: verifier.challenge,
-});
-
-// Verifier: Verify the proof
-const verification = await OpenAC.verify(presentation, {
-  policy: { age: { gte: 18 } },
-  nonce: verifier.challenge,
-  trustedIssuers: [issuer.url],
-});
-
-if (verification.valid) {
-  console.log("Access granted: User is 18+");
-  // Verifier knows: User is 18+
-  // Verifier does NOT know: Exact age, birthdate, name, nationality
-} else {
-  console.log("Access denied");
+  return `${headerB64}.${payloadB64}.${signatureB64}~${birthdayDisclosure}~${nationalityDisclosure}`;
 }
+
+async function main() {
+  // User: Prepare credential with ZK proof capability
+  const credential = createCredential();
+  const wallet = await OpenAC.prepare({
+    credential,
+    deviceBinding: true,
+  });
+
+  // Verifier: Request proof of age >= 18
+  const challenge = OpenAC.generateNonce();
+
+  // User: Generate privacy-preserving proof
+  const presentation = await wallet.show({
+    policy: { age: { gte: 18 } },
+    nonce: challenge,
+  });
+
+  // Verifier: Verify the proof
+  const verification = await OpenAC.verify(
+    presentation,
+    { age: { gte: 18 } },
+    { expectedNonce: challenge }
+  );
+
+  if (verification.valid) {
+    console.log("Access granted: User is 18+");
+    // Verifier knows: User is 18+
+    // Verifier does NOT know: Exact age, birthdate, name, nationality
+  } else {
+    console.log("Access denied");
+  }
+}
+
+main();
 ```
 
 ### Advanced: Multiple Policies
@@ -225,18 +270,18 @@ const proof = await handle.show({
 });
 ```
 
-### `OpenAC.verify(presentation, options)`
+### `OpenAC.verify(proof, policy?, options?)`
 
 Verifies a zero-knowledge presentation proof (~34ms).
 
 **Parameters:**
 
 ```typescript
-{
-  presentation: Presentation;   // Proof to verify
-  policy: PolicyPredicates;     // Expected policy
-  nonce: string;                // Challenge nonce
-  trustedIssuers?: string[];    // Allowed issuer URLs
+proof: Proof | SerializedProof;   // Proof to verify
+policy?: Policy;                   // Expected policy (optional)
+options?: {
+  expectedNonce?: string;          // Challenge nonce to verify
+  trustedIssuers?: string[];       // Allowed issuer URLs
 }
 ```
 
@@ -245,11 +290,7 @@ Verifies a zero-knowledge presentation proof (~34ms).
 **Example:**
 
 ```typescript
-const result = await OpenAC.verify(proof, {
-  policy: { age: { gte: 21 } },
-  nonce: verifierNonce,
-  trustedIssuers: ["https://government.example"],
-});
+const result = await OpenAC.verify(proof, { age: { gte: 21 } }, { expectedNonce: verifierNonce });
 ```
 
 ## Policy Predicates

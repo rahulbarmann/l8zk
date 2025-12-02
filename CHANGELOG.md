@@ -5,6 +5,14 @@ All notable changes to the L8ZK SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2024-12-02
+
+### Fixed
+
+- Fixed README Quick Start example to use working `createTestCredential()` helper
+- Fixed "Complete Example: Age Verification" with correct API usage
+- Fixed `OpenAC.verify()` API documentation to show correct signature: `verify(proof, policy?, options?)`
+
 ## [1.3.0] - 2024-12-02
 
 ### Added
